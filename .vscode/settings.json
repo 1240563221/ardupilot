@@ -1,4 +1,6 @@
 {
     "cSpell.language": "en-GB",
-    "astyle.astylerc": "${workspaceFolder}/Tools/CodeStyle/astylerc"
+    "astyle.astylerc": "${workspaceFolder}/Tools/CodeStyle/astylerc",
+    "cmake.sourceDirectory": "/home/cc/Desktop/Git_Folder/ardupilot/modules/DroneCAN/libcanard/canard/tests",
+    "ros.distro": "melodic"
 }

@@ -139,6 +139,31 @@ void Rover::read_radio()
 
     // check if we try to do RC arm/disarm
     rudder_arm_disarm_check();
+
+//my code
+    // static const uint8_t cc1_buf[8]={0x1,0x03,0x00,0x00,0x0,0x1,0x84,0x0a};
+    static uint8_t cnt=0;
+    cnt++;
+    if(cnt == 10)
+    {
+        cnt=0;
+        // MAV_SEVERITY severity = MAV_SEVERITY_INFO;
+        // GCS_SEND_TEXT(severity, "lalalalalalalalala\n");
+        // GCS_SEND_TEXT(severity, 
+        //         "channel_throttle : %d\n channel_lateral : %d\n
+        //         channel_steer : %d \n channel_walking_height : %d\n
+        //         channel_roll : %d\n channel_pitch : %d\n",channel_throttle->get_radio_in(), channel_lateral->get_radio_in(),
+        //         channel_steer->get_radio_in(), channel_walking_height->get_radio_in(),
+        //         channel_roll->get_radio_in(), channel_pitch->get_radio_in());
+        // GCS_SEND_TEXT(severity, "channel_throttle:%d\n",channel_throttle->get_radio_in());
+        // GCS_SEND_TEXT(severity, "channel_lateral:%d\n",channel_lateral->get_radio_in());
+        // GCS_SEND_TEXT(severity, "channel_walking_height:%d\n",channel_walking_height->get_radio_in());
+        // GCS_SEND_TEXT(severity, "channel_steer:%d\n",channel_steer->get_radio_in());
+        // GCS_SEND_TEXT(severity, "channel_roll:%d\n",channel_roll->get_radio_in());
+        // GCS_SEND_TEXT(severity, "channel_pitch:%d\n",channel_pitch->get_radio_in());
+        // hal.serial(1)->write(cc1_buf,8);
+        
+    }
 }
 
 void Rover::radio_failsafe_check(uint16_t pwm)

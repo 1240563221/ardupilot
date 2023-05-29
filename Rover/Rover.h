@@ -308,6 +308,9 @@ private:
     // fence.cpp
     void fence_check();
 
+    //my code
+    void my_serial1(void);
+
     // GCS_Mavlink.cpp
     void send_wheel_encoder_distance(mavlink_channel_t chan);
 

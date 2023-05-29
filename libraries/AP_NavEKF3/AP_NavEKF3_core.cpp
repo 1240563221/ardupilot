@@ -46,30 +46,31 @@ bool NavEKF3_core::setup_core(uint8_t _imu_index, uint8_t _core_index)
                         (uint16_t)(EKF_TARGET_DT_MS)
                                   ))));
 
-    // GPS sensing can have large delays and should not be included if disabled
-    if (frontend->sources.usingGPS()) {
-        // Wait for the configuration of all GPS units to be confirmed. Until this has occurred the GPS driver cannot provide a correct time delay
-        float gps_delay_sec = 0;
-        if (!dal.gps().get_lag(selected_gps, gps_delay_sec)) {
-#if HAL_GCS_ENABLED
-            const uint32_t now = dal.millis();
-            if (now - lastInitFailReport_ms > 10000) {
-                lastInitFailReport_ms = now;
-                // provide an escalating series of messages
-                MAV_SEVERITY severity = MAV_SEVERITY_INFO;
-                if (now > 30000) {
-                    severity = MAV_SEVERITY_ERROR;
-                } else if (now > 15000) {
-                    severity = MAV_SEVERITY_WARNING;
-                }
-                GCS_SEND_TEXT(severity, "EKF3 waiting for GPS config data");
-            }
-#endif
-            return false;
-        }
-        // limit the time delay value from the GPS library to a max of 250 msec which is the max value the EKF has been tested for.
-        maxTimeDelay_ms = MAX(maxTimeDelay_ms , MIN((uint16_t)(gps_delay_sec * 1000.0f),250));
-    }
+//my code
+//     // GPS sensing can have large delays and should not be included if disabled
+//     if (frontend->sources.usingGPS()) {
+//         // Wait for the configuration of all GPS units to be confirmed. Until this has occurred the GPS driver cannot provide a correct time delay
+//         float gps_delay_sec = 0;
+//         if (!dal.gps().get_lag(selected_gps, gps_delay_sec)) {
+// #if HAL_GCS_ENABLED
+//             const uint32_t now = dal.millis();
+//             if (now - lastInitFailReport_ms > 10000) {
+//                 lastInitFailReport_ms = now;
+//                 // provide an escalating series of messages
+//                 MAV_SEVERITY severity = MAV_SEVERITY_INFO;
+//                 if (now > 30000) {
+//                     severity = MAV_SEVERITY_ERROR;
+//                 } else if (now > 15000) {
+//                     severity = MAV_SEVERITY_WARNING;
+//                 }
+//                 GCS_SEND_TEXT(severity, "EKF3 waiting for GPS config data");
+//             }
+// #endif
+//             return false;
+//         }
+//         // limit the time delay value from the GPS library to a max of 250 msec which is the max value the EKF has been tested for.
+//         maxTimeDelay_ms = MAX(maxTimeDelay_ms , MIN((uint16_t)(gps_delay_sec * 1000.0f),250));
+//     }
 
     // airspeed sensing can have large delays and should not be included if disabled
     if (dal.airspeed_sensor_enabled()) {

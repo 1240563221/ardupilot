@@ -133,6 +133,9 @@ void Rover::init_ardupilot()
     // initialize SmartRTL
     g2.smart_rtl.init();
 
+    //my code
+    // hal.serial(1)->begin(115200);
+
     // initialise object avoidance
     g2.oa.init();
 
