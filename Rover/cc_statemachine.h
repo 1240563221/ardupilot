@@ -1,8 +1,9 @@
-#ifndef __STATEMACHINE_H
-#define __STATEMACHINE_H
+#ifndef __CC_STATEMACHINE_H
+#define __CC_STATEMACHINE_H
 
 #include "Rover.h"
 #include "AP_Gripper/AP_Gripper.h"
+#include "cc_CRC.h"
 
 //my code
 #define MASK_STATE(x)   ((uint16_t)x<<12)
@@ -117,8 +118,7 @@ void state3_exit(void);
 void state4_entry(void);
 void state4_do(void);
 void state4_exit(void);
-uint16_t usMBCRC16( uint8_t * pucFrame, uint16_t usLen );
-void generateCRC(uint8_t *buffer);
+
 
 void fsm_init(FSM_t* pFsm,EVENT_MAP_t* pEventMap,ACTION_MAP_t *pActionMap);
 void fsm_state_transfer(FSM_t* pFsm, EVENT_t stEventID);
