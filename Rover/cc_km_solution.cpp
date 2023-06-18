@@ -7,7 +7,7 @@ uint16_t valueKey[3];
 uint16_t byteModbus = 0;
 static uint8_t modbusFrame[8]={0x0, 0x06, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0};
 uint16_t phase = 0;
-double  delta_t=0.025;          //s
+double  delta_t=0.040;          //s
 
 const uint16_t ResetLine = 0b1110111111111110;
 const uint16_t ResetSLine = 0b1110111111111111;
@@ -52,10 +52,10 @@ void Rover::test_616(void)
     modbusFrame[5] = (byteModbus & 0xFF);
     generateCRC(modbusFrame);
 
-    hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
+    // hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
 
 
-    // hal.serial(1)->printf("test_616    time:%.3f\n", (double)(AP_HAL::millis() * 0.001f));
+    hal.serial(1)->printf("time:%.3f\n", (double)(AP_HAL::millis() * 0.001f));
     // hal.serial(1)->printf("valueRockerKey.frequency:%.4f\n", valueRockerKey.frequency);
     // hal.serial(1)->printf("valueRockerKey.phaseOffset:%x\n", valueRockerKey.phaseOffset);
     // hal.serial(1)->printf("valueRockerKey.amplitude:%.4x\n", valueRockerKey.amplitude);

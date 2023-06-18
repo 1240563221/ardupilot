@@ -138,7 +138,7 @@ const AP_Scheduler::Task Rover::scheduler_tasks[] = {
 
     //my code
     // SCHED_TASK(my_serial1,    20,    200, 128),
-    SCHED_TASK(test_616,    1,    1000, 128),
+    SCHED_TASK(test_616,    20,    1000, 128),   //    correspondent 25hz
 
 #if ADVANCED_FAILSAFE == ENABLED
     SCHED_TASK(afs_fs_check,           10,    200, 129),
