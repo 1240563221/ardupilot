@@ -17,11 +17,11 @@
 
 typedef struct
 {
-    double frequency;         //control frequency
+    double frequency;           //control frequency
     uint8_t phaseOffset;       
     uint16_t amplitude;
-    uint8_t key[3];              //KeyA control mode; KeyB line; KeyC bend 
-
+    uint8_t key[3];             //KeyA control mode; KeyB line; KeyC bend 
+    bool resetFlag;             //indicate the flag of keyB and KeyC, lock synchronise phase,waiting for frequency unlock
 }
 valueRockerKey_TPDF; 
 

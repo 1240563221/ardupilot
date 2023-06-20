@@ -15,11 +15,11 @@ const uint16_t ResetSLine = 0b1110111111111111;
 
 
 /*
-    define test_616 task.
+    define kmModelSolution task.
     Use steady-state solution of Kuramoto(KM) Model 
     
     */
-void Rover::test_616(void)
+void Rover::kmModelSolution(void)
 {
     // double t_last=0, t_now=0;
     byteModbus = 0;
@@ -30,55 +30,46 @@ void Rover::test_616(void)
         phase -= 360;
     }
 
+
     if(valueRockerKey.key[RC_CHANEL_KEY_B-RC_CHANEL_KEY_A] == 1)
     {
         byteModbus = ResetLine;
+        phase = 0;
+        valueRockerKey.resetFlag = true;
         valueRockerKey.key[RC_CHANEL_KEY_B-RC_CHANEL_KEY_A] = 0;
+
+        modbusFrame[4] = (byteModbus >> 8) & 0xFF;
+        modbusFrame[5] = (byteModbus & 0xFF);
+        generateCRC(modbusFrame);
+        hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
     }
     else if(valueRockerKey.key[RC_CHANEL_KEY_C-RC_CHANEL_KEY_A] == 1)
     {
         byteModbus = ResetSLine;
+        phase = 0;
+        valueRockerKey.resetFlag = true;
         valueRockerKey.key[RC_CHANEL_KEY_C-RC_CHANEL_KEY_A] = 0;
+
+        modbusFrame[4] = (byteModbus >> 8) & 0xFF;
+        modbusFrame[5] = (byteModbus & 0xFF);
+        generateCRC(modbusFrame);
+        hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
     }
     else
     {
-        byteModbus |= valueRockerKey.phaseOffset << 12;
-        byteModbus |= valueRockerKey.key[RC_CHANEL_KEY_A-RC_CHANEL_KEY_A] << 11;
-        byteModbus |= valueRockerKey.amplitude << 9;
-        byteModbus |= phase;
+        if(!valueRockerKey.resetFlag)
+        {
+            byteModbus |= valueRockerKey.phaseOffset << 12;
+            byteModbus |= valueRockerKey.key[RC_CHANEL_KEY_A-RC_CHANEL_KEY_A] << 11;
+            byteModbus |= valueRockerKey.amplitude << 9;
+            byteModbus |= phase;
+
+            modbusFrame[4] = (byteModbus >> 8) & 0xFF;
+            modbusFrame[5] = (byteModbus & 0xFF);
+            generateCRC(modbusFrame);
+            hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
+        }
     }
-
-    modbusFrame[4] = (byteModbus >> 8) & 0xFF;
-    modbusFrame[5] = (byteModbus & 0xFF);
-    generateCRC(modbusFrame);
-
-    // hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
-
-
-    hal.serial(1)->printf("time:%.3f\n", (double)(AP_HAL::millis() * 0.001f));
-    // hal.serial(1)->printf("valueRockerKey.frequency:%.4f\n", valueRockerKey.frequency);
-    // hal.serial(1)->printf("valueRockerKey.phaseOffset:%x\n", valueRockerKey.phaseOffset);
-    // hal.serial(1)->printf("valueRockerKey.amplitude:%.4x\n", valueRockerKey.amplitude);
-    // hal.serial(1)->printf("valueRockerKey.key[A]:%d\n", valueRockerKey.key[0]);
-    // hal.serial(1)->printf("valueRockerKey.key[B]:%d\n", valueRockerKey.key[1]);
-    // hal.serial(1)->printf("Amplitude Value:%d\n", hal.rcin->read(RC_CHANEL_ROCKER_LEFTUP));
-    // hal.serial(1)->printf("valueRockerKey.key[C]:%d\n", valueRockerKey.key[2]);
-
-    // if(valueRockerKey.key[RC_CHANEL_KEY_A-RC_CHANEL_KEY_A] == 1)
-    // {
-    //     // byteModbus = ResetLine;
-    //     valueRockerKey.key[RC_CHANEL_KEY_A-RC_CHANEL_KEY_A] = 0;
-    // }
-    // if(valueRockerKey.key[RC_CHANEL_KEY_B-RC_CHANEL_KEY_A] == 1)
-    // {
-    //     // byteModbus = ResetLine;
-    //     valueRockerKey.key[RC_CHANEL_KEY_B-RC_CHANEL_KEY_A] = 0;
-    // }
-    // if(valueRockerKey.key[RC_CHANEL_KEY_C-RC_CHANEL_KEY_A] == 1)
-    // {
-    //     // byteModbus = ResetSLine;
-    //     valueRockerKey.key[RC_CHANEL_KEY_C-RC_CHANEL_KEY_A] = 0;
-    // }
 }
 
 /*
@@ -186,7 +177,11 @@ void detectionRocker(void)
     uint16_t temFrequency = hal.rcin->read(RC_CHANEL_ROCKER_LEFT_LONGITUDINAL);
     if((temFrequency > 1100) && (temFrequency < 1450))
     {
-        valueRockerKey.frequency = (double)((1500 - temFrequency) *2) / (double)400; 
+        valueRockerKey.frequency = (double)((1500 - temFrequency) *(double)1.8) / (double)400; 
+        if(valueRockerKey.resetFlag)
+        {
+            valueRockerKey.resetFlag = false;
+        }
     }else if(hal.rcin->read(RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL) > 1750)
     {
         valueRockerKey.frequency = 1; 
