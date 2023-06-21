@@ -20,8 +20,10 @@ typedef struct
     double frequency;           //control frequency
     uint8_t phaseOffset;       
     uint16_t amplitude;
+    uint16_t synPhase;          //synchronous phase 
     uint8_t key[3];             //KeyA control mode; KeyB line; KeyC bend 
     bool resetFlag;             //indicate the flag of keyB and KeyC, lock synchronise phase,waiting for frequency unlock
+    bool reversalFlag;          //the flag of back car
 }
 valueRockerKey_TPDF; 
 

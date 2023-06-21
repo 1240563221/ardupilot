@@ -3,16 +3,16 @@
 
 valueRockerKey_TPDF valueRockerKey;
 
-uint16_t valueKey[3];
-uint16_t byteModbus = 0;
-static uint8_t modbusFrame[8]={0x0, 0x06, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0};
-uint16_t phase = 0;
+uint16_t valueKey[3];           //temp key value buffer
+uint16_t byteModbus = 0;        //modbus byte
+static uint8_t modbusFrame[8]={0x0, 0x06, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0};    //modbus protocol frame
+uint16_t phase = 0;             //temp synchronous phase
 double  delta_t=0.040;          //s
 
 const uint16_t ResetLine = 0b1110111111111110;
 const uint16_t ResetSLine = 0b1110111111111111;
 
-
+bool initFlag = true;
 
 /*
     define kmModelSolution task.
@@ -22,19 +22,40 @@ const uint16_t ResetSLine = 0b1110111111111111;
 void Rover::kmModelSolution(void)
 {
     // double t_last=0, t_now=0;
+    if(initFlag)
+    {
+        initFlag = false;
+        valueRockerKey.resetFlag = true;
+        valueRockerKey.reversalFlag = false;
+        valueRockerKey.synPhase = 0;
+    }
+
     byteModbus = 0;
     detectionKeyRocker();
-    phase += 2*180*valueRockerKey.frequency*delta_t;
+    valueRockerKey.synPhase += 2*180*valueRockerKey.frequency*delta_t;
+    if(valueRockerKey.synPhase > 360)
+    {
+        valueRockerKey.synPhase -= 360;
+    }
+
+    if(valueRockerKey.reversalFlag)     //phase relationship when reversal 
+    {
+        phase = 3*180 - valueRockerKey.synPhase;
+    }else
+    {
+        phase = valueRockerKey.synPhase;
+    }
+
     if(phase > 360)
     {
-        phase -= 360;
+        phase = phase % 360;
     }
 
 
-    if(valueRockerKey.key[RC_CHANEL_KEY_B-RC_CHANEL_KEY_A] == 1)
+    if(valueRockerKey.key[RC_CHANEL_KEY_B-RC_CHANEL_KEY_A] == 1)        //detect KeyB
     {
         byteModbus = ResetLine;
-        phase = 0;
+        valueRockerKey.synPhase = 0;
         valueRockerKey.resetFlag = true;
         valueRockerKey.key[RC_CHANEL_KEY_B-RC_CHANEL_KEY_A] = 0;
 
@@ -43,10 +64,10 @@ void Rover::kmModelSolution(void)
         generateCRC(modbusFrame);
         hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
     }
-    else if(valueRockerKey.key[RC_CHANEL_KEY_C-RC_CHANEL_KEY_A] == 1)
+    else if(valueRockerKey.key[RC_CHANEL_KEY_C-RC_CHANEL_KEY_A] == 1)   //detect KeyC
     {
         byteModbus = ResetSLine;
-        phase = 0;
+        valueRockerKey.synPhase = 0;
         valueRockerKey.resetFlag = true;
         valueRockerKey.key[RC_CHANEL_KEY_C-RC_CHANEL_KEY_A] = 0;
 
@@ -70,6 +91,10 @@ void Rover::kmModelSolution(void)
             hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
         }
     }
+
+    // hal.serial(1)->printf("valueRockerKey.synPhase:%d\n", valueRockerKey.synPhase);
+    // hal.serial(1)->printf("phase:%d\n", phase);
+    // hal.serial(1)->printf("valueRockerKey.phaseOffset:%.4x\n", valueRockerKey.phaseOffset);
 }
 
 /*
@@ -123,72 +148,84 @@ void detectionRocker(void)
         valueRockerKey.phaseOffset = 0b0111;
     }else if( temOffset <=1150 )
     {
-        valueRockerKey.phaseOffset = 0b0000;
+        valueRockerKey.phaseOffset = 0b1110;
     }else if( temOffset <=1200 )
     {
-        valueRockerKey.phaseOffset = 0b0001;
+        valueRockerKey.phaseOffset = 0b1101;
     }
     else if( temOffset <=1250 )
     {
-        valueRockerKey.phaseOffset = 0b0010;
+        valueRockerKey.phaseOffset = 0b1100;
     }else if( temOffset <=1300 )
     {
-        valueRockerKey.phaseOffset = 0b0011;
+        valueRockerKey.phaseOffset = 0b1011;
     }
     else if( temOffset <=1350 )
     {
-        valueRockerKey.phaseOffset = 0b0100;
+        valueRockerKey.phaseOffset = 0b1010;
     }else if( temOffset <=1400 )
     {
-        valueRockerKey.phaseOffset = 0b0101;
+        valueRockerKey.phaseOffset = 0b1001;
     }
     else if( temOffset <=1450 )
     {
-        valueRockerKey.phaseOffset = 0b0110;
+        valueRockerKey.phaseOffset = 0b1000;
     }else if( temOffset <=1550 )
     {
         valueRockerKey.phaseOffset = 0b0111;
     }else if( temOffset <=1600 )
     {
-        valueRockerKey.phaseOffset = 0b1000;
+        valueRockerKey.phaseOffset = 0b0110;
     }
     else if( temOffset <=1650 )
     {
-        valueRockerKey.phaseOffset = 0b1001;
+        valueRockerKey.phaseOffset = 0b0101;
     }else if( temOffset <=1700 )
     {
-        valueRockerKey.phaseOffset = 0b1010;
+        valueRockerKey.phaseOffset = 0b0100;
     }
     else if( temOffset <=1750 )
     {
-        valueRockerKey.phaseOffset = 0b1011;
+        valueRockerKey.phaseOffset = 0b0011;
     }else if( temOffset <=1800 )
     {
-        valueRockerKey.phaseOffset = 0b1100;
+        valueRockerKey.phaseOffset = 0b0010;
     }
     else if( temOffset <=1850 )
     {
-        valueRockerKey.phaseOffset = 0b1101;
+        valueRockerKey.phaseOffset = 0b0001;
     }else
     {
-        valueRockerKey.phaseOffset = 0b1110;
+        valueRockerKey.phaseOffset = 0b0000;
     }
 
     uint16_t temFrequency = hal.rcin->read(RC_CHANEL_ROCKER_LEFT_LONGITUDINAL);
     if((temFrequency > 1100) && (temFrequency < 1450))
     {
-        valueRockerKey.frequency = (double)((1500 - temFrequency) *(double)1.8) / (double)400; 
+        valueRockerKey.frequency = (double)((1500 - temFrequency) *(double)1.2) / (double)400; 
         if(valueRockerKey.resetFlag)
         {
             valueRockerKey.resetFlag = false;
         }
+        if(valueRockerKey.reversalFlag)
+        {
+            valueRockerKey.reversalFlag = false;
+        }
     }else if(hal.rcin->read(RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL) > 1750)
     {
-        valueRockerKey.frequency = 1; 
+        valueRockerKey.frequency = 0.6; 
         valueRockerKey.phaseOffset = 0b1111;
+        if(!valueRockerKey.reversalFlag)
+        {
+            valueRockerKey.reversalFlag = true;
+        }
     }else
     {
         valueRockerKey.frequency = 0; 
+        if(valueRockerKey.reversalFlag)
+        {
+            valueRockerKey.reversalFlag = false;
+        }
     }
 
     uint16_t temKeyA = hal.rcin->read(RC_CHANEL_KEY_A);
