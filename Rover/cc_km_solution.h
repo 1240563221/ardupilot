@@ -15,23 +15,33 @@
 #define RC_CHANEL_KEY_C                         10
 
 
-typedef struct
+class KM_Solution
 {
-    double frequency;           //control frequency
-    uint8_t phaseOffset;       
-    uint16_t amplitude;
-    uint16_t synPhase;          //synchronous phase 
-    uint8_t key[3];             //KeyA control mode; KeyB line; KeyC bend 
-    bool resetFlag;             //indicate the flag of keyB and KeyC, lock synchronise phase,waiting for frequency unlock
-    bool reversalFlag;          //the flag of back car
-}
-valueRockerKey_TPDF; 
+    public:
+    friend class Rover;
+    struct valueRockerKey
+    {
+        double frequency;           //control frequency
+        uint8_t phaseOffset;       
+        uint16_t amplitude;
+        int16_t synPhase;          //synchronous phase 
+        uint8_t key[3];             //KeyA control mode; KeyB line; KeyC bend 
+        bool resetFlag;             //indicate the flag of keyB and KeyC, lock synchronise phase,waiting for frequency unlock
+        bool reversalFlag;          //the flag of back car
+    }valueRockerKey;
 
+    uint8_t modbusFrame[8];         //modbus protocol frame
+    uint16_t phase;                 //temp synchronous phase
+    uint16_t byteModbus;            //modbus byte
+    uint16_t valueKey[3];           //temp key value buffer
+    double  delta_t;                //s
 
-
-void detectionKeyRocker(void);
-void detectionKey(uint8_t ch, uint8_t *buff);
-void detectionRocker(void);
-
+    KM_Solution(void);
+    void runStep(void);
+    void detectionKeyRocker(void);
+    void detectionKey(uint8_t ch, uint8_t *buff);
+    void detectionRocker(void);
+    private:
+};
 
 #endif

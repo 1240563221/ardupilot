@@ -1,18 +1,9 @@
 #include "cc_km_solution.h"
 
-
-valueRockerKey_TPDF valueRockerKey;
-
-uint16_t valueKey[3];           //temp key value buffer
-uint16_t byteModbus = 0;        //modbus byte
-static uint8_t modbusFrame[8]={0x0, 0x06, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0};    //modbus protocol frame
-uint16_t phase = 0;             //temp synchronous phase
-double  delta_t=0.040;          //s
-
 const uint16_t ResetLine = 0b1110111111111110;
 const uint16_t ResetSLine = 0b1110111111111111;
 
-bool initFlag = true;
+KM_Solution km_solution;
 
 /*
     define kmModelSolution task.
@@ -21,21 +12,49 @@ bool initFlag = true;
     */
 void Rover::kmModelSolution(void)
 {
-    // double t_last=0, t_now=0;
-    if(initFlag)
+
+    km_solution.detectionKeyRocker();
+    km_solution.runStep();
+    // hal.serial(1)->printf("origin phase:%d\n", km_solution.valueRockerKey.synPhase);
+    // hal.serial(1)->printf("synchronous phase:%d\n", km_solution.phase);
+}   
+
+/*
+    construct function - init public varies
+    */
+KM_Solution::KM_Solution(void)
+{
+    valueRockerKey.resetFlag = true;
+    valueRockerKey.reversalFlag = false;
+    valueRockerKey.synPhase = 0;
+    phase = 0;
+    valueKey[0] = valueKey[1] = valueKey[2] = 0;
+    modbusFrame[0] = modbusFrame[2] = modbusFrame[3] = modbusFrame[4] = modbusFrame[5] = modbusFrame[6] = modbusFrame[7] = 0;
+    modbusFrame[1] = 0x06;
+    delta_t = 0.04;
+}
+
+/*
+    
+    */
+void KM_Solution::runStep(void)
+{
+    byteModbus = 0;
+    if(valueRockerKey.reversalFlag) //phase relationship when reversal 
     {
-        initFlag = false;
-        valueRockerKey.resetFlag = true;
-        valueRockerKey.reversalFlag = false;
-        valueRockerKey.synPhase = 0;
+        valueRockerKey.synPhase -= (double)(2*180*valueRockerKey.frequency*delta_t);
+    }else
+    {
+        valueRockerKey.synPhase += 2*180*valueRockerKey.frequency*delta_t;
     }
 
-    byteModbus = 0;
-    detectionKeyRocker();
-    valueRockerKey.synPhase += 2*180*valueRockerKey.frequency*delta_t;
+
     if(valueRockerKey.synPhase > 360)
     {
         valueRockerKey.synPhase -= 360;
+    }else if(valueRockerKey.synPhase < 0)
+    {
+        valueRockerKey.synPhase += 360;
     }
 
     if(valueRockerKey.reversalFlag)     //phase relationship when reversal 
@@ -91,16 +110,12 @@ void Rover::kmModelSolution(void)
             hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
         }
     }
-
-    // hal.serial(1)->printf("valueRockerKey.synPhase:%d\n", valueRockerKey.synPhase);
-    // hal.serial(1)->printf("phase:%d\n", phase);
-    // hal.serial(1)->printf("valueRockerKey.phaseOffset:%.4x\n", valueRockerKey.phaseOffset);
 }
 
 /*
     detect all value of rocker and key
     */
-void detectionKeyRocker(void)
+void KM_Solution::detectionKeyRocker(void)
 {
     detectionKey(RC_CHANEL_KEY_B, valueRockerKey.key);
     detectionKey(RC_CHANEL_KEY_C, valueRockerKey.key);
@@ -112,7 +127,7 @@ void detectionKeyRocker(void)
     ch: the channel of radio
     buff: the pointer of buffer
     */
-void detectionKey(uint8_t ch, uint8_t *buff)
+void KM_Solution::detectionKey(uint8_t ch, uint8_t *buff)
 {
     if(valueKey[ch-RC_CHANEL_KEY_A] != hal.rcin->read(ch))
     {
@@ -124,7 +139,7 @@ void detectionKey(uint8_t ch, uint8_t *buff)
 /*
     read frequency/amplitude/offset
     */
-void detectionRocker(void)
+void KM_Solution::detectionRocker(void)
 {
 
     uint16_t temAmplitude = hal.rcin->read(RC_CHANEL_ROCKER_LEFTUP);
@@ -199,10 +214,11 @@ void detectionRocker(void)
         valueRockerKey.phaseOffset = 0b0000;
     }
 
-    uint16_t temFrequency = hal.rcin->read(RC_CHANEL_ROCKER_LEFT_LONGITUDINAL);
-    if((temFrequency > 1100) && (temFrequency < 1450))
+    uint16_t temForwardFrequency = hal.rcin->read(RC_CHANEL_ROCKER_LEFT_LONGITUDINAL);
+    uint16_t temBackwardFrequency = hal.rcin->read(RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL);
+    if((temForwardFrequency > 1100) && (temForwardFrequency < 1450))
     {
-        valueRockerKey.frequency = (double)((1500 - temFrequency) *(double)1.2) / (double)400; 
+        valueRockerKey.frequency = (double)((1500 - temForwardFrequency) *(double)1.2) / (double)400; 
         if(valueRockerKey.resetFlag)
         {
             valueRockerKey.resetFlag = false;
@@ -211,9 +227,9 @@ void detectionRocker(void)
         {
             valueRockerKey.reversalFlag = false;
         }
-    }else if(hal.rcin->read(RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL) > 1750)
+    }else if(temBackwardFrequency > 1650)
     {
-        valueRockerKey.frequency = 0.6; 
+        valueRockerKey.frequency = (double)((temBackwardFrequency - 1500) *(double)0.6) / (double)400; 
         valueRockerKey.phaseOffset = 0b1111;
         if(!valueRockerKey.reversalFlag)
         {
