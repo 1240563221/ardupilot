@@ -15,10 +15,13 @@
 #define RC_CHANEL_KEY_C                         10
 
 
+#define MAX_FREQUENCY_FORWARD                   1.5f
+#define MAX_FREQUENCY_BACKWARD                  1.0f
+
 class KM_Solution
 {
     public:
-    friend class Rover;
+    friend class Rover;             //friend class
     struct valueRockerKey
     {
         double frequency;           //control frequency

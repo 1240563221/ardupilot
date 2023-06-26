@@ -40,12 +40,14 @@ KM_Solution::KM_Solution(void)
 void KM_Solution::runStep(void)
 {
     byteModbus = 0;
-    if(valueRockerKey.reversalFlag) //phase relationship when reversal 
+    if(valueRockerKey.resetFlag)
+    {
+    }else if(valueRockerKey.reversalFlag) //phase relationship when reversal 
     {
         valueRockerKey.synPhase -= (double)(2*180*valueRockerKey.frequency*delta_t);
     }else
     {
-        valueRockerKey.synPhase += 2*180*valueRockerKey.frequency*delta_t;
+        valueRockerKey.synPhase += (double)(2*180*valueRockerKey.frequency*delta_t);
     }
 
 
@@ -218,7 +220,7 @@ void KM_Solution::detectionRocker(void)
     uint16_t temBackwardFrequency = hal.rcin->read(RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL);
     if((temForwardFrequency > 1100) && (temForwardFrequency < 1450))
     {
-        valueRockerKey.frequency = (double)((1500 - temForwardFrequency) *(double)1.2) / (double)400; 
+        valueRockerKey.frequency = (double)((1500 - temForwardFrequency) *(double)MAX_FREQUENCY_FORWARD) / (double)400; 
         if(valueRockerKey.resetFlag)
         {
             valueRockerKey.resetFlag = false;
@@ -229,7 +231,7 @@ void KM_Solution::detectionRocker(void)
         }
     }else if(temBackwardFrequency > 1650)
     {
-        valueRockerKey.frequency = (double)((temBackwardFrequency - 1500) *(double)0.6) / (double)400; 
+        valueRockerKey.frequency = (double)((temBackwardFrequency - 1500) *(double)MAX_FREQUENCY_BACKWARD) / (double)400; 
         valueRockerKey.phaseOffset = 0b1111;
         if(!valueRockerKey.reversalFlag)
         {
