@@ -13,10 +13,29 @@ KM_Solution km_solution;
 void Rover::kmModelSolution(void)
 {
 
+#if CUBE_ORANGE_MINI_SET
+
     km_solution.detectionKeyRocker();
     km_solution.runStep();
-    // hal.serial(1)->printf("origin phase:%d\n", km_solution.valueRockerKey.synPhase);
-    // hal.serial(1)->printf("synchronous phase:%d\n", km_solution.phase);
+
+#elif  KAKUTE_H7_MINI_NAND
+    // hal.serial(3)->printf("origin phase:%d\n", km_solution.valueRockerKey.synPhase);
+    // hal.serial(3)->printf("synchronous phase:%d\n", km_solution.phase);
+    // hal.serial(3)->printf("ch0_val:%d\n", hal.rcin->read(0));
+    // hal.serial(3)->printf("ch1_val:%d\n", hal.rcin->read(1));
+    // hal.serial(3)->printf("ch2_val:%d\n", hal.rcin->read(2));
+    // hal.serial(3)->printf("ch3_val:%d\n", hal.rcin->read(3));
+    // km_solution.detectionKeyRocker();
+    // hal.serial(3)->printf("key[A]:%d\n", km_solution.valueRockerKey.key[0]);
+    // hal.serial(3)->printf("ch4_val:%d\n", hal.rcin->read(4));
+    // hal.serial(3)->printf("ch5_val:%d\n", hal.rcin->read(5));
+    // hal.serial(3)->printf("ch6_val:%d\n", hal.rcin->read(6));
+    // hal.serial(3)->printf("ch7_val:%d\n", hal.rcin->read(7));
+    // hal.serial(3)->printf("ch8_val:%d\n", hal.rcin->read(8));
+
+    km_solution.detectionKeyRocker();
+    km_solution.runStep();
+#endif
 }   
 
 /*
@@ -32,6 +51,7 @@ KM_Solution::KM_Solution(void)
     modbusFrame[0] = modbusFrame[2] = modbusFrame[3] = modbusFrame[4] = modbusFrame[5] = modbusFrame[6] = modbusFrame[7] = 0;
     modbusFrame[1] = 0x06;
     delta_t = 0.04;
+    sendFlag = false;
 }
 
 /*
@@ -74,6 +94,7 @@ void KM_Solution::runStep(void)
 
 
     if(valueRockerKey.key[RC_CHANEL_KEY_B-RC_CHANEL_KEY_A] == 1)        //detect KeyB
+
     {
         byteModbus = ResetLine;
         valueRockerKey.synPhase = 0;
@@ -83,7 +104,11 @@ void KM_Solution::runStep(void)
         modbusFrame[4] = (byteModbus >> 8) & 0xFF;
         modbusFrame[5] = (byteModbus & 0xFF);
         generateCRC(modbusFrame);
+#if CUBE_ORANGE_MINI_SET
         hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
+#elif KAKUTE_H7_MINI_NAND
+        hal.serial(3)->write(modbusFrame, sizeof(modbusFrame));
+#endif
     }
     else if(valueRockerKey.key[RC_CHANEL_KEY_C-RC_CHANEL_KEY_A] == 1)   //detect KeyC
     {
@@ -95,12 +120,17 @@ void KM_Solution::runStep(void)
         modbusFrame[4] = (byteModbus >> 8) & 0xFF;
         modbusFrame[5] = (byteModbus & 0xFF);
         generateCRC(modbusFrame);
+#if CUBE_ORANGE_MINI_SET
         hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
+#elif KAKUTE_H7_MINI_NAND
+        hal.serial(3)->write(modbusFrame, sizeof(modbusFrame));
+#endif
     }
     else
     {
         if(!valueRockerKey.resetFlag)
         {
+            
             byteModbus |= valueRockerKey.phaseOffset << 12;
             byteModbus |= valueRockerKey.key[RC_CHANEL_KEY_A-RC_CHANEL_KEY_A] << 11;
             byteModbus |= valueRockerKey.amplitude << 9;
@@ -109,7 +139,20 @@ void KM_Solution::runStep(void)
             modbusFrame[4] = (byteModbus >> 8) & 0xFF;
             modbusFrame[5] = (byteModbus & 0xFF);
             generateCRC(modbusFrame);
-            hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
+            if((valueRockerKey.frequency < 0.1) && (valueRockerKey.phaseOffset == 0b0111) && (!sendFlag))  //stop uart transmit when f=0
+            {
+
+            }else{
+#if CUBE_ORANGE_MINI_SET
+                hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
+#elif KAKUTE_H7_MINI_NAND
+                hal.serial(3)->write(modbusFrame, sizeof(modbusFrame));
+#endif
+                if(sendFlag)
+                {
+                    sendFlag = false;
+                }
+            }
         }
     }
 }
@@ -119,8 +162,12 @@ void KM_Solution::runStep(void)
     */
 void KM_Solution::detectionKeyRocker(void)
 {
+#if CUBE_ORANGE_MINI_SET
     detectionKey(RC_CHANEL_KEY_B, valueRockerKey.key);
     detectionKey(RC_CHANEL_KEY_C, valueRockerKey.key);
+#elif KAKUTE_H7_MINI_NAND
+    detectionKey(RC_CHANEL_KEY_B_C, valueRockerKey.key);
+#endif
     detectionRocker();
 }
 
@@ -131,11 +178,36 @@ void KM_Solution::detectionKeyRocker(void)
     */
 void KM_Solution::detectionKey(uint8_t ch, uint8_t *buff)
 {
+#if CUBE_ORANGE_MINI_SET
     if(valueKey[ch-RC_CHANEL_KEY_A] != hal.rcin->read(ch))
     {
         buff[ch-RC_CHANEL_KEY_A] = 1;
     }
     valueKey[ch-RC_CHANEL_KEY_A] = hal.rcin->read(ch);
+#elif KAKUTE_H7_MINI_NAND
+    static uint16_t tem_value = 0;
+    static uint8_t  temCnt = 0;
+
+    tem_value = hal.rcin->read(ch);
+    if(tem_value < 1200)
+    {
+        if(temCnt == 0)
+        {
+            buff[1] = 1;
+        }
+        temCnt = 1;
+    }else if(tem_value < 1800)
+    {
+        temCnt = 0;
+    }else
+    {
+        if(temCnt == 0)
+        {
+            buff[2] = 1;
+        }
+        temCnt = 2;
+    }
+#endif
 }
 
 /*
@@ -143,21 +215,56 @@ void KM_Solution::detectionKey(uint8_t ch, uint8_t *buff)
     */
 void KM_Solution::detectionRocker(void)
 {
-
+#if CUBE_ORANGE_MINI_SET
     uint16_t temAmplitude = hal.rcin->read(RC_CHANEL_ROCKER_LEFTUP);
-    if(temAmplitude <= 1300)
+    static uint8_t temAmVal = 0;
+    if(temAmplitude <= AMPLITITUDE_THRESHOLD_0_4)
     {
-        valueRockerKey.amplitude = 0b00;
-    }else if(temAmplitude <= 1500)
+        temAmVal = 0b00;
+    }else if(temAmplitude <= AMPLITITUDE_THRESHOLD_1_4)
     {
-        valueRockerKey.amplitude = 0b01;
-    }else if(temAmplitude <= 1700)
+        temAmVal = 0b01;
+    }else if(temAmplitude <= AMPLITITUDE_THRESHOLD_2_4)
     {
-        valueRockerKey.amplitude = 0b10;
+        temAmVal = 0b10;
     }else
     {
-        valueRockerKey.amplitude = 0b11;
+        temAmVal = 0b11;
     }
+
+    if(valueRockerKey.amplitude != temAmVal)
+    {
+        if(!sendFlag)
+        {
+            sendFlag = true;
+        }
+    }
+
+    valueRockerKey.amplitude = temAmVal;
+
+#elif KAKUTE_H7_MINI_NAND
+    static uint8_t temAmVal = 0;
+    uint16_t temAmplitude = hal.rcin->read(RC_CHANEL_ROCKER_AMPLITITUDE);
+    if(temAmplitude <= AMPLITITUDE_THRESHOLD_0_4)
+    {
+        temAmVal = 0b00;
+    }else if(temAmplitude <= AMPLITITUDE_THRESHOLD_2_4)
+    {
+        temAmVal = 0b01;
+    }else
+    {
+        temAmVal = 0b10;
+    }
+
+    if(valueRockerKey.amplitude != temAmVal)
+    {
+        if(!sendFlag)
+        {
+            sendFlag = true;
+        }
+    }
+
+#endif
 
     uint16_t temOffset = hal.rcin->read(RC_CHANEL_ROCKER_LEFT_LATERAL);
     if(temOffset == 0)
@@ -247,12 +354,24 @@ void KM_Solution::detectionRocker(void)
     }
 
     uint16_t temKeyA = hal.rcin->read(RC_CHANEL_KEY_A);
-    if(temKeyA == 1000)
+    static uint8_t temKeyVal;
+
+    if(temKeyA <= 1100)
     {
-        valueRockerKey.key[RC_CHANEL_KEY_A-RC_CHANEL_KEY_A] = 0;
-    }else if(temKeyA == 1900)
+        temKeyVal = 0;
+    }else if(temKeyA >= 1900)
     {
-        valueRockerKey.key[RC_CHANEL_KEY_A-RC_CHANEL_KEY_A] = 1;
+        temKeyVal = 1;
     }
+
+    if(valueRockerKey.key[RC_CHANEL_KEY_A-RC_CHANEL_KEY_A] != temKeyVal)
+    {
+        if(!sendFlag)
+        {
+            sendFlag = true;
+        }
+    }
+
+    valueRockerKey.key[RC_CHANEL_KEY_A-RC_CHANEL_KEY_A] = temKeyVal;
 
 }

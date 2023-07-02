@@ -5,18 +5,47 @@
 #include "AP_Gripper/AP_Gripper.h"
 #include "cc_CRC.h"
 
-#define RC_CHANEL_ROCKER_LEFT_LONGITUDINAL      2
-#define RC_CHANEL_ROCKER_LEFT_LATERAL           3
-#define RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL     1
-#define RC_CHANEL_ROCKER_RIGHT_LATERAL          0
-#define RC_CHANEL_ROCKER_LEFTUP                 7
-#define RC_CHANEL_KEY_A                         8
-#define RC_CHANEL_KEY_B                         9
-#define RC_CHANEL_KEY_C                         10
+#define CUBE_ORANGE_MINI_SET 1                      //serial(1)
+#define KAKUTE_H7_MINI_NAND  0                      //serial(3)
 
 
-#define MAX_FREQUENCY_FORWARD                   1.5f
-#define MAX_FREQUENCY_BACKWARD                  1.0f
+#if CUBE_ORANGE_MINI_SET
+    #define RC_CHANEL_ROCKER_LEFT_LONGITUDINAL      2
+    #define RC_CHANEL_ROCKER_LEFT_LATERAL           3
+    #define RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL     1
+    #define RC_CHANEL_ROCKER_RIGHT_LATERAL          0
+    #define RC_CHANEL_ROCKER_LEFTUP                 7
+    #define RC_CHANEL_KEY_A                         8
+    #define RC_CHANEL_KEY_B                         9
+    #define RC_CHANEL_KEY_C                         10
+
+    #define AMPLITITUDE_THRESHOLD_0_4               1300
+    #define AMPLITITUDE_THRESHOLD_1_4               1500
+    #define AMPLITITUDE_THRESHOLD_2_4               1700
+    #define AMPLITITUDE_THRESHOLD_3_4               1900
+#elif KAKUTE_H7_MINI_NAND
+    #define RC_CHANEL_ROCKER_LEFT_LONGITUDINAL      2
+    #define RC_CHANEL_ROCKER_LEFT_LATERAL           3
+    #define RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL     1
+    #define RC_CHANEL_ROCKER_RIGHT_LATERAL          0
+    #define RC_CHANEL_ROCKER_AMPLITITUDE            7
+    #define RC_CHANEL_KEY_A                         4
+    #define RC_CHANEL_KEY_B_C                       5
+    #define RC_CHANEL_KEY_B                         5
+    #define RC_CHANEL_KEY_C                         6
+
+    #define AMPLITITUDE_THRESHOLD_0_4               1300
+    #define AMPLITITUDE_THRESHOLD_1_4               1500
+    #define AMPLITITUDE_THRESHOLD_2_4               1700
+    #define AMPLITITUDE_THRESHOLD_3_4               1900
+
+
+
+#endif
+
+
+#define MAX_FREQUENCY_FORWARD                   1.3f
+#define MAX_FREQUENCY_BACKWARD                  0.8f
 
 class KM_Solution
 {
@@ -39,6 +68,8 @@ class KM_Solution
     uint16_t valueKey[3];           //temp key value buffer
     double  delta_t;                //s
 
+    bool sendFlag;                  //determine send flag
+
     KM_Solution(void);
     void runStep(void);
     void detectionKeyRocker(void);
@@ -46,5 +77,7 @@ class KM_Solution
     void detectionRocker(void);
     private:
 };
+
+
 
 #endif
