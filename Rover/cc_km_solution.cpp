@@ -5,6 +5,11 @@ const uint16_t ResetSLine = 0b1110111111111111;
 
 KM_Solution km_solution;
 
+#if defined(CUBE_ORANGE_MINI_SET_ENABLE) + defined(KAKUTE_H7_MINI_NAND_ENABLE) != 1
+#error "you can't enable two macro at the same time !!!!!!!"
+#error "Please select one of two macro to enable !!!!!"
+#endif 
+
 /*
     define kmModelSolution task.
     Use steady-state solution of Kuramoto(KM) Model 
@@ -13,12 +18,12 @@ KM_Solution km_solution;
 void Rover::kmModelSolution(void)
 {
 
-#if CUBE_ORANGE_MINI_SET
+#if defined(CUBE_ORANGE_MINI_SET_ENABLE)
 
     km_solution.detectionKeyRocker();
     km_solution.runStep();
 
-#elif  KAKUTE_H7_MINI_NAND
+#elif defined(KAKUTE_H7_MINI_NAND_ENABLE)
     // hal.serial(3)->printf("origin phase:%d\n", km_solution.valueRockerKey.synPhase);
     // hal.serial(3)->printf("synchronous phase:%d\n", km_solution.phase);
     // hal.serial(3)->printf("ch0_val:%d\n", hal.rcin->read(0));
@@ -104,9 +109,9 @@ void KM_Solution::runStep(void)
         modbusFrame[4] = (byteModbus >> 8) & 0xFF;
         modbusFrame[5] = (byteModbus & 0xFF);
         generateCRC(modbusFrame);
-#if CUBE_ORANGE_MINI_SET
+#if defined(CUBE_ORANGE_MINI_SET_ENABLE)
         hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
-#elif KAKUTE_H7_MINI_NAND
+#elif defined(KAKUTE_H7_MINI_NAND_ENABLE)
         hal.serial(3)->write(modbusFrame, sizeof(modbusFrame));
 #endif
     }
@@ -120,9 +125,9 @@ void KM_Solution::runStep(void)
         modbusFrame[4] = (byteModbus >> 8) & 0xFF;
         modbusFrame[5] = (byteModbus & 0xFF);
         generateCRC(modbusFrame);
-#if CUBE_ORANGE_MINI_SET
+#if defined(CUBE_ORANGE_MINI_SET_ENABLE)
         hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
-#elif KAKUTE_H7_MINI_NAND
+#elif defined(KAKUTE_H7_MINI_NAND_ENABLE)
         hal.serial(3)->write(modbusFrame, sizeof(modbusFrame));
 #endif
     }
@@ -143,9 +148,9 @@ void KM_Solution::runStep(void)
             {
 
             }else{
-#if CUBE_ORANGE_MINI_SET
+#if defined(CUBE_ORANGE_MINI_SET_ENABLE)
                 hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
-#elif KAKUTE_H7_MINI_NAND
+#elif defined(KAKUTE_H7_MINI_NAND_ENABLE)
                 hal.serial(3)->write(modbusFrame, sizeof(modbusFrame));
 #endif
                 if(sendFlag)
@@ -162,10 +167,10 @@ void KM_Solution::runStep(void)
     */
 void KM_Solution::detectionKeyRocker(void)
 {
-#if CUBE_ORANGE_MINI_SET
+#if defined(CUBE_ORANGE_MINI_SET_ENABLE)
     detectionKey(RC_CHANEL_KEY_B, valueRockerKey.key);
     detectionKey(RC_CHANEL_KEY_C, valueRockerKey.key);
-#elif KAKUTE_H7_MINI_NAND
+#elif defined(KAKUTE_H7_MINI_NAND_ENABLE)
     detectionKey(RC_CHANEL_KEY_B_C, valueRockerKey.key);
 #endif
     detectionRocker();
@@ -178,13 +183,13 @@ void KM_Solution::detectionKeyRocker(void)
     */
 void KM_Solution::detectionKey(uint8_t ch, uint8_t *buff)
 {
-#if CUBE_ORANGE_MINI_SET
+#if defined(CUBE_ORANGE_MINI_SET_ENABLE)
     if(valueKey[ch-RC_CHANEL_KEY_A] != hal.rcin->read(ch))
     {
         buff[ch-RC_CHANEL_KEY_A] = 1;
     }
     valueKey[ch-RC_CHANEL_KEY_A] = hal.rcin->read(ch);
-#elif KAKUTE_H7_MINI_NAND
+#elif defined(KAKUTE_H7_MINI_NAND_ENABLE)
     static uint16_t tem_value = 0;
     static uint8_t  temCnt = 0;
 
@@ -215,7 +220,7 @@ void KM_Solution::detectionKey(uint8_t ch, uint8_t *buff)
     */
 void KM_Solution::detectionRocker(void)
 {
-#if CUBE_ORANGE_MINI_SET
+#if defined(CUBE_ORANGE_MINI_SET_ENABLE)
     uint16_t temAmplitude = hal.rcin->read(RC_CHANEL_ROCKER_LEFTUP);
     static uint8_t temAmVal = 0;
     if(temAmplitude <= AMPLITITUDE_THRESHOLD_0_4)
@@ -242,7 +247,7 @@ void KM_Solution::detectionRocker(void)
 
     valueRockerKey.amplitude = temAmVal;
 
-#elif KAKUTE_H7_MINI_NAND
+#elif defined(KAKUTE_H7_MINI_NAND_ENABLE)
     static uint8_t temAmVal = 0;
     uint16_t temAmplitude = hal.rcin->read(RC_CHANEL_ROCKER_AMPLITITUDE);
     if(temAmplitude <= AMPLITITUDE_THRESHOLD_0_4)

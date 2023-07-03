@@ -139,9 +139,9 @@ const AP_Scheduler::Task Rover::scheduler_tasks[] = {
 
     //my code
     // SCHED_TASK(my_serial1,    20,    200, 128),
-#if CUBE_ORANGE_MINI_SET
+#if defined(CUBE_ORANGE_MINI_SET_ENABLE)
     SCHED_TASK(kmModelSolution,    20,    1000, 128),   //not correct,correspondent 25hz
-#elif  KAKUTE_H7_MINI_NAND
+#elif defined(KAKUTE_H7_MINI_NAND_ENABLE)
     SCHED_TASK(kmModelSolution,    2,    1000, 128),   //not correct,correspondent 25hz
 #endif
 

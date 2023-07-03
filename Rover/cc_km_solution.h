@@ -5,11 +5,11 @@
 #include "AP_Gripper/AP_Gripper.h"
 #include "cc_CRC.h"
 
-#define CUBE_ORANGE_MINI_SET 1                      //serial(1)
-#define KAKUTE_H7_MINI_NAND  0                      //serial(3)
+#define CUBE_ORANGE_MINI_SET_ENABLE                     //serial(1)
+// #define KAKUTE_H7_MINI_NAND_ENABLE                      //serial(3)
 
 
-#if CUBE_ORANGE_MINI_SET
+#if defined(CUBE_ORANGE_MINI_SET_ENABLE)
     #define RC_CHANEL_ROCKER_LEFT_LONGITUDINAL      2
     #define RC_CHANEL_ROCKER_LEFT_LATERAL           3
     #define RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL     1
@@ -23,7 +23,7 @@
     #define AMPLITITUDE_THRESHOLD_1_4               1500
     #define AMPLITITUDE_THRESHOLD_2_4               1700
     #define AMPLITITUDE_THRESHOLD_3_4               1900
-#elif KAKUTE_H7_MINI_NAND
+#elif defined(KAKUTE_H7_MINI_NAND_ENABLE)
     #define RC_CHANEL_ROCKER_LEFT_LONGITUDINAL      2
     #define RC_CHANEL_ROCKER_LEFT_LATERAL           3
     #define RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL     1
@@ -39,10 +39,7 @@
     #define AMPLITITUDE_THRESHOLD_2_4               1700
     #define AMPLITITUDE_THRESHOLD_3_4               1900
 
-
-
 #endif
-
 
 #define MAX_FREQUENCY_FORWARD                   1.3f
 #define MAX_FREQUENCY_BACKWARD                  0.8f
@@ -77,7 +74,6 @@ class KM_Solution
     void detectionRocker(void);
     private:
 };
-
 
 
 #endif
