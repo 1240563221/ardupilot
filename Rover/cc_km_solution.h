@@ -41,8 +41,11 @@
 
 #endif
 
-#define MAX_FREQUENCY_FORWARD                   1.3f
-#define MAX_FREQUENCY_BACKWARD                  0.8f
+#define MAX_FREQUENCY_FORWARD                           1.3f
+#define MAX_FREQUENCY_BACKWARD                          0.8f
+
+#define FREQUENCY_FIRST_ORDER_FILTER_GAIN               0.07f
+#define PHASE_OFFSET_FIRST_ORDER_FILTER_GAIN            0.02f
 
 class KM_Solution
 {
@@ -58,6 +61,12 @@ class KM_Solution
         bool resetFlag;             //indicate the flag of keyB and KeyC, lock synchronise phase,waiting for frequency unlock
         bool reversalFlag;          //the flag of back car
     }valueRockerKey;
+
+    struct 
+    {
+        double frequency_input;      //contribute to first order filter -> frequency
+        int16_t phaseOffset_input;   //contribute to first order filter -> phase offset
+    }firstOrderParameter;            //the struct of first order filter
 
     uint8_t modbusFrame[8];         //modbus protocol frame
     uint16_t phase;                 //temp synchronous phase

@@ -6,8 +6,8 @@ const uint16_t ResetSLine = 0b1110111111111111;
 KM_Solution km_solution;
 
 #if defined(CUBE_ORANGE_MINI_SET_ENABLE) + defined(KAKUTE_H7_MINI_NAND_ENABLE) != 1
-#error "you can't enable two macro at the same time !!!!!!!"
-#error "Please select one of two macro to enable !!!!!"
+    #error "you can't enable two macro at the same time !!!!!!!"
+    #error "Please select one of two macro to enable !!!!!"
 #endif 
 
 /*
@@ -60,17 +60,19 @@ KM_Solution::KM_Solution(void)
 }
 
 /*
-    
+   send the data of synchronous phase, mode and turn to slave, the frequency of run determine by 1/delta_t
     */
 void KM_Solution::runStep(void)
 {
     byteModbus = 0;
     if(valueRockerKey.resetFlag)
     {
-    }else if(valueRockerKey.reversalFlag) //phase relationship when reversal 
+    }
+    else if(valueRockerKey.reversalFlag) //phase relationship when reversal 
     {
         valueRockerKey.synPhase -= (double)(2*180*valueRockerKey.frequency*delta_t);
-    }else
+    }
+    else
     {
         valueRockerKey.synPhase += (double)(2*180*valueRockerKey.frequency*delta_t);
     }
@@ -79,7 +81,8 @@ void KM_Solution::runStep(void)
     if(valueRockerKey.synPhase > 360)
     {
         valueRockerKey.synPhase -= 360;
-    }else if(valueRockerKey.synPhase < 0)
+    }
+    else if(valueRockerKey.synPhase < 0)
     {
         valueRockerKey.synPhase += 360;
     }
@@ -87,7 +90,8 @@ void KM_Solution::runStep(void)
     if(valueRockerKey.reversalFlag)     //phase relationship when reversal 
     {
         phase = 3*180 - valueRockerKey.synPhase;
-    }else
+    }
+    else
     {
         phase = valueRockerKey.synPhase;
     }
@@ -147,7 +151,9 @@ void KM_Solution::runStep(void)
             if((valueRockerKey.frequency < 0.1) && (valueRockerKey.phaseOffset == 0b0111) && (!sendFlag))  //stop uart transmit when f=0
             {
 
-            }else{
+            }
+            else
+            {
 #if defined(CUBE_ORANGE_MINI_SET_ENABLE)
                 hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
 #elif defined(KAKUTE_H7_MINI_NAND_ENABLE)
@@ -216,7 +222,7 @@ void KM_Solution::detectionKey(uint8_t ch, uint8_t *buff)
 }
 
 /*
-    read frequency/amplitude/offset
+    read frequency/amplitude/offset from remote control
     */
 void KM_Solution::detectionRocker(void)
 {
@@ -271,56 +277,60 @@ void KM_Solution::detectionRocker(void)
 
 #endif
 
-    uint16_t temOffset = hal.rcin->read(RC_CHANEL_ROCKER_LEFT_LATERAL);
-    if(temOffset == 0)
+    //get phase offset from remote control
+    int16_t temOffset = (int16_t)hal.rcin->read(RC_CHANEL_ROCKER_LEFT_LATERAL) - 1500;
+    //phase offset first order filter
+    firstOrderParameter.phaseOffset_input = PHASE_OFFSET_FIRST_ORDER_FILTER_GAIN * temOffset + 
+                  (1 - PHASE_OFFSET_FIRST_ORDER_FILTER_GAIN) * firstOrderParameter.phaseOffset_input;
+    if( firstOrderParameter.phaseOffset_input < -400 )
     {
         valueRockerKey.phaseOffset = 0b0111;
-    }else if( temOffset <=1150 )
+    }else if( firstOrderParameter.phaseOffset_input <= -350 )
     {
         valueRockerKey.phaseOffset = 0b1110;
-    }else if( temOffset <=1200 )
+    }else if( firstOrderParameter.phaseOffset_input <= -300 )
     {
         valueRockerKey.phaseOffset = 0b1101;
     }
-    else if( temOffset <=1250 )
+    else if( firstOrderParameter.phaseOffset_input <= -250 )
     {
         valueRockerKey.phaseOffset = 0b1100;
-    }else if( temOffset <=1300 )
+    }else if( firstOrderParameter.phaseOffset_input <= -200 )
     {
         valueRockerKey.phaseOffset = 0b1011;
     }
-    else if( temOffset <=1350 )
+    else if( firstOrderParameter.phaseOffset_input <= -150 )
     {
         valueRockerKey.phaseOffset = 0b1010;
-    }else if( temOffset <=1400 )
+    }else if( firstOrderParameter.phaseOffset_input <= -100 )
     {
         valueRockerKey.phaseOffset = 0b1001;
     }
-    else if( temOffset <=1450 )
+    else if( firstOrderParameter.phaseOffset_input <= -50 )
     {
         valueRockerKey.phaseOffset = 0b1000;
-    }else if( temOffset <=1550 )
+    }else if( firstOrderParameter.phaseOffset_input <= 50 )
     {
         valueRockerKey.phaseOffset = 0b0111;
-    }else if( temOffset <=1600 )
+    }else if( firstOrderParameter.phaseOffset_input <= 100 )
     {
         valueRockerKey.phaseOffset = 0b0110;
     }
-    else if( temOffset <=1650 )
+    else if( firstOrderParameter.phaseOffset_input <= 150 )
     {
         valueRockerKey.phaseOffset = 0b0101;
-    }else if( temOffset <=1700 )
+    }else if( firstOrderParameter.phaseOffset_input <= 200 )
     {
         valueRockerKey.phaseOffset = 0b0100;
     }
-    else if( temOffset <=1750 )
+    else if( firstOrderParameter.phaseOffset_input <= 250 )
     {
         valueRockerKey.phaseOffset = 0b0011;
-    }else if( temOffset <=1800 )
+    }else if( firstOrderParameter.phaseOffset_input <= 300 )
     {
         valueRockerKey.phaseOffset = 0b0010;
     }
-    else if( temOffset <=1850 )
+    else if( firstOrderParameter.phaseOffset_input <= 350 )
     {
         valueRockerKey.phaseOffset = 0b0001;
     }else
@@ -328,11 +338,71 @@ void KM_Solution::detectionRocker(void)
         valueRockerKey.phaseOffset = 0b0000;
     }
 
+
+
+
+    // if(temOffset == 0)
+    // {
+    //     valueRockerKey.phaseOffset = 0b0111;
+    // }else if( temOffset <=1150 )
+    // {
+    //     valueRockerKey.phaseOffset = 0b1110;
+    // }else if( temOffset <=1200 )
+    // {
+    //     valueRockerKey.phaseOffset = 0b1101;
+    // }
+    // else if( temOffset <=1250 )
+    // {
+    //     valueRockerKey.phaseOffset = 0b1100;
+    // }else if( temOffset <=1300 )
+    // {
+    //     valueRockerKey.phaseOffset = 0b1011;
+    // }
+    // else if( temOffset <=1350 )
+    // {
+    //     valueRockerKey.phaseOffset = 0b1010;
+    // }else if( temOffset <=1400 )
+    // {
+    //     valueRockerKey.phaseOffset = 0b1001;
+    // }
+    // else if( temOffset <=1450 )
+    // {
+    //     valueRockerKey.phaseOffset = 0b1000;
+    // }else if( temOffset <=1550 )
+    // {
+    //     valueRockerKey.phaseOffset = 0b0111;
+    // }else if( temOffset <=1600 )
+    // {
+    //     valueRockerKey.phaseOffset = 0b0110;
+    // }
+    // else if( temOffset <=1650 )
+    // {
+    //     valueRockerKey.phaseOffset = 0b0101;
+    // }else if( temOffset <=1700 )
+    // {
+    //     valueRockerKey.phaseOffset = 0b0100;
+    // }
+    // else if( temOffset <=1750 )
+    // {
+    //     valueRockerKey.phaseOffset = 0b0011;
+    // }else if( temOffset <=1800 )
+    // {
+    //     valueRockerKey.phaseOffset = 0b0010;
+    // }
+    // else if( temOffset <=1850 )
+    // {
+    //     valueRockerKey.phaseOffset = 0b0001;
+    // }else
+    // {
+    //     valueRockerKey.phaseOffset = 0b0000;
+    // }
+
+    //get forward/backward frequency
     uint16_t temForwardFrequency = hal.rcin->read(RC_CHANEL_ROCKER_LEFT_LONGITUDINAL);
     uint16_t temBackwardFrequency = hal.rcin->read(RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL);
     if((temForwardFrequency > 1100) && (temForwardFrequency < 1450))
     {
-        valueRockerKey.frequency = (double)((1500 - temForwardFrequency) *(double)MAX_FREQUENCY_FORWARD) / (double)400; 
+        firstOrderParameter.frequency_input = (double)((1500 - temForwardFrequency) *(double)MAX_FREQUENCY_FORWARD) / (double)400; 
         if(valueRockerKey.resetFlag)
         {
             valueRockerKey.resetFlag = false;
@@ -343,7 +413,7 @@ void KM_Solution::detectionRocker(void)
         }
     }else if(temBackwardFrequency > 1650)
     {
-        valueRockerKey.frequency = (double)((temBackwardFrequency - 1500) *(double)MAX_FREQUENCY_BACKWARD) / (double)400; 
+        firstOrderParameter.frequency_input = (double)((temBackwardFrequency - 1500) *(double)MAX_FREQUENCY_BACKWARD) / (double)400; 
         valueRockerKey.phaseOffset = 0b1111;
         if(!valueRockerKey.reversalFlag)
         {
@@ -351,12 +421,16 @@ void KM_Solution::detectionRocker(void)
         }
     }else
     {
-        valueRockerKey.frequency = 0; 
+        firstOrderParameter.frequency_input = 0; 
         if(valueRockerKey.reversalFlag)
         {
             valueRockerKey.reversalFlag = false;
         }
     }
+    //first order filter
+    valueRockerKey.frequency = FREQUENCY_FIRST_ORDER_FILTER_GAIN * firstOrderParameter.frequency_input + 
+                              (1 - FREQUENCY_FIRST_ORDER_FILTER_GAIN) * valueRockerKey.frequency;
+
 
     uint16_t temKeyA = hal.rcin->read(RC_CHANEL_KEY_A);
     static uint8_t temKeyVal;
