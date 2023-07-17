@@ -1103,14 +1103,15 @@ void AP_GPS::update(void)
     WITH_SEMAPHORE(rsem);
 
     for (uint8_t i=0; i<GPS_MAX_RECEIVERS; i++) {
-        //my code : locate modify code
-        //oringal code : update_instance(i);
-        if(i == 0)
-        {
-            continue;
-        }else{
-            update_instance(i);
-        }
+        update_instance(i);
+        // //my code : locate modify code
+        // //oringal code : update_instance(i);
+        // if(i == 0)
+        // {
+        //     continue;
+        // }else{
+        //     update_instance(i);
+        // }
     }
 
     // calculate number of instances
