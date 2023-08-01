@@ -5,11 +5,25 @@
 #include "AP_Gripper/AP_Gripper.h"
 #include "cc_CRC.h"
 
-#define CUBE_ORANGE_MINI_SET_ENABLE                     //serial(1)
-// #define KAKUTE_H7_MINI_NAND_ENABLE                      //serial(3)
+
+/*
+    the difference of choose fly controller is the video transfer module,
+    the Cube means use herelink v1.1 as the video transfer module because it has both radio and video transmission together.
+    the Kakute means radio and video transmission are work independently.(like three angle video module and tx18s)
+    */
+#define FLY_CONTROLLER_CHOOSE                          0       //0--herelink_v1.1   1--radio and video transmission independently
+
+#if  0 == FLY_CONTROLLER_CHOOSE
+#define BOTH_HERELINK_V11_MODULE_ENABLE                     //serial(1)
+#elif 1 == FLY_CONTROLLER_CHOOSE
+#define SEPERATE_ELSR_915M_ENAB                      //serial(3)
+#endif
 
 
-#if defined(CUBE_ORANGE_MINI_SET_ENABLE)
+/*
+    the difference between two macro is radio's channel correspond to high level commands(like forward, backward, turn, etc)
+    */
+#if defined(BOTH_HERELINK_V11_MODULE_ENABLE)
     #define RC_CHANEL_ROCKER_LEFT_LONGITUDINAL      2
     #define RC_CHANEL_ROCKER_LEFT_LATERAL           3
     #define RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL     1
@@ -23,7 +37,7 @@
     #define AMPLITITUDE_THRESHOLD_1_4               1500
     #define AMPLITITUDE_THRESHOLD_2_4               1700
     #define AMPLITITUDE_THRESHOLD_3_4               1900
-#elif defined(KAKUTE_H7_MINI_NAND_ENABLE)
+#elif defined(SEPERATE_ELSR_915M_ENAB)
     #define RC_CHANEL_ROCKER_LEFT_LONGITUDINAL      2
     #define RC_CHANEL_ROCKER_LEFT_LATERAL           3
     #define RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL     1
