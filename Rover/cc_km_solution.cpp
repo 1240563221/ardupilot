@@ -227,6 +227,7 @@ void KM_Solution::detectionKey(uint8_t ch, uint8_t *buff)
 void KM_Solution::detectionRocker(void)
 {
 #if defined(BOTH_HERELINK_V11_MODULE_ENABLE)
+    //amplitude parameter
     uint16_t temAmplitude = hal.rcin->read(RC_CHANEL_ROCKER_LEFTUP);
     static uint8_t temAmVal = 0;
     if(temAmplitude <= AMPLITITUDE_THRESHOLD_0_4)
@@ -277,7 +278,7 @@ void KM_Solution::detectionRocker(void)
 
 #endif
 
-    //get phase offset from remote control
+    //get phase offset from remote control -- turning parameters
     int16_t temOffset = (int16_t)hal.rcin->read(RC_CHANEL_ROCKER_LEFT_LATERAL) - 1500;
     //phase offset first order filter
     firstOrderParameter.phaseOffset_input = PHASE_OFFSET_FIRST_ORDER_FILTER_GAIN * temOffset + 
@@ -339,68 +340,10 @@ void KM_Solution::detectionRocker(void)
     }
 
 
-
-
-    // if(temOffset == 0)
-    // {
-    //     valueRockerKey.phaseOffset = 0b0111;
-    // }else if( temOffset <=1150 )
-    // {
-    //     valueRockerKey.phaseOffset = 0b1110;
-    // }else if( temOffset <=1200 )
-    // {
-    //     valueRockerKey.phaseOffset = 0b1101;
-    // }
-    // else if( temOffset <=1250 )
-    // {
-    //     valueRockerKey.phaseOffset = 0b1100;
-    // }else if( temOffset <=1300 )
-    // {
-    //     valueRockerKey.phaseOffset = 0b1011;
-    // }
-    // else if( temOffset <=1350 )
-    // {
-    //     valueRockerKey.phaseOffset = 0b1010;
-    // }else if( temOffset <=1400 )
-    // {
-    //     valueRockerKey.phaseOffset = 0b1001;
-    // }
-    // else if( temOffset <=1450 )
-    // {
-    //     valueRockerKey.phaseOffset = 0b1000;
-    // }else if( temOffset <=1550 )
-    // {
-    //     valueRockerKey.phaseOffset = 0b0111;
-    // }else if( temOffset <=1600 )
-    // {
-    //     valueRockerKey.phaseOffset = 0b0110;
-    // }
-    // else if( temOffset <=1650 )
-    // {
-    //     valueRockerKey.phaseOffset = 0b0101;
-    // }else if( temOffset <=1700 )
-    // {
-    //     valueRockerKey.phaseOffset = 0b0100;
-    // }
-    // else if( temOffset <=1750 )
-    // {
-    //     valueRockerKey.phaseOffset = 0b0011;
-    // }else if( temOffset <=1800 )
-    // {
-    //     valueRockerKey.phaseOffset = 0b0010;
-    // }
-    // else if( temOffset <=1850 )
-    // {
-    //     valueRockerKey.phaseOffset = 0b0001;
-    // }else
-    // {
-    //     valueRockerKey.phaseOffset = 0b0000;
-    // }
-
     //get forward/backward frequency
     uint16_t temForwardFrequency = hal.rcin->read(RC_CHANEL_ROCKER_LEFT_LONGITUDINAL);
     uint16_t temBackwardFrequency = hal.rcin->read(RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL);
-    if((temForwardFrequency > 1100) && (temForwardFrequency < 1450))
+    if((temForwardFrequency > 1100) && (temForwardFrequency < 1450))                    //the first priority of forward than backward
     {
         firstOrderParameter.frequency_input = (double)((1500 - temForwardFrequency) *(double)MAX_FREQUENCY_FORWARD) / (double)400; 
         if(valueRockerKey.resetFlag)
@@ -422,11 +365,16 @@ void KM_Solution::detectionRocker(void)
     }else
     {
         firstOrderParameter.frequency_input = 0; 
-        if(valueRockerKey.reversalFlag)
-        {
-            valueRockerKey.reversalFlag = false;
+        
+        if(valueRockerKey.frequency < 0.1)                      //ensure that robot doesn't move forward after releasing the backward joystick
+        {                                                       //it's a bug  --- nowadays it have been repaired
+            if(valueRockerKey.reversalFlag)
+            {
+                valueRockerKey.reversalFlag = false;
+            }
         }
     }
+    
     //first order filter
     valueRockerKey.frequency = FREQUENCY_FIRST_ORDER_FILTER_GAIN * firstOrderParameter.frequency_input + 
                               (1 - FREQUENCY_FIRST_ORDER_FILTER_GAIN) * valueRockerKey.frequency;
@@ -450,7 +398,6 @@ void KM_Solution::detectionRocker(void)
             sendFlag = true;
         }
     }
-
     valueRockerKey.key[RC_CHANEL_KEY_A-RC_CHANEL_KEY_A] = temKeyVal;
 
 }

@@ -64,37 +64,38 @@
 class KM_Solution
 {
     public:
-    friend class Rover;             //friend class
-    struct valueRockerKey
-    {
-        double frequency;           //control frequency
-        uint8_t phaseOffset;       
-        uint16_t amplitude;
-        int16_t synPhase;          //synchronous phase 
-        uint8_t key[3];             //KeyA control mode; KeyB line; KeyC bend 
-        bool resetFlag;             //indicate the flag of keyB and KeyC, lock synchronise phase,waiting for frequency unlock
-        bool reversalFlag;          //the flag of back car
-    }valueRockerKey;
+        friend class Rover;             //friend class -- the class of rover could access KM_Solution
+        struct valueRockerKey
+        {
+            double frequency;           //control frequency
+            uint8_t phaseOffset;       
+            uint16_t amplitude;
+            int16_t synPhase;          //synchronous phase 
+            uint8_t key[3];             //KeyA control mode; KeyB line; KeyC bend 
+            bool resetFlag;             //indicate the flag of keyB and KeyC, lock synchronise phase,waiting for frequency unlock
+            bool reversalFlag;          //the flag of back car
+        }valueRockerKey;
 
-    struct 
-    {
-        double frequency_input;      //contribute to first order filter -> frequency
-        int16_t phaseOffset_input;   //contribute to first order filter -> phase offset
-    }firstOrderParameter;            //the struct of first order filter
+        struct 
+        {
+            double frequency_input;      //contribute to first order filter -> frequency
+            int16_t phaseOffset_input;   //contribute to first order filter -> phase offset
+        }firstOrderParameter;            //the struct of first order filter
 
-    uint8_t modbusFrame[8];         //modbus protocol frame
-    uint16_t phase;                 //temp synchronous phase
-    uint16_t byteModbus;            //modbus byte
-    uint16_t valueKey[3];           //temp key value buffer
-    double  delta_t;                //s
+        uint8_t modbusFrame[8];         //modbus protocol frame
+        uint16_t phase;                 //temp synchronous phase
+        uint16_t byteModbus;            //modbus byte
+        uint16_t valueKey[3];           //temp key value buffer
+        double  delta_t;                //s
 
-    bool sendFlag;                  //determine send flag
+        bool sendFlag;                  //determine send flag
 
-    KM_Solution(void);
-    void runStep(void);
-    void detectionKeyRocker(void);
-    void detectionKey(uint8_t ch, uint8_t *buff);
-    void detectionRocker(void);
+        KM_Solution(void);
+        void runStep(void);
+        void detectionKeyRocker(void);
+        void detectionKey(uint8_t ch, uint8_t *buff);
+        void detectionRocker(void);
+
     private:
 };
 
