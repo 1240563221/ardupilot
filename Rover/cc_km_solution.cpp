@@ -365,14 +365,27 @@ void KM_Solution::detectionRocker(void)
     }else
     {
         firstOrderParameter.frequency_input = 0; 
-        
-        if(valueRockerKey.frequency < 0.1)                      //ensure that robot doesn't move forward after releasing the backward joystick
-        {                                                       //it's a bug  --- nowadays it have been repaired
-            if(valueRockerKey.reversalFlag)
-            {
+
+        if(valueRockerKey.reversalFlag)
+        {
+            valueRockerKey.phaseOffset = 0b1111;
+            if(valueRockerKey.frequency < 0.1)                  //ensure that robot doesn't move forward after releasing the backward joystick
+            {                                                   //it's a bug  --- nowadays it have been repaired
+                valueRockerKey.phaseOffset = 0b0111;
+                valueRockerKey.frequency = 0;
                 valueRockerKey.reversalFlag = false;
             }
         }
+
+        // if(valueRockerKey.frequency < 0.3)                      //ensure that robot doesn't move forward after releasing the backward joystick
+        // {                                                       //it's a bug  --- nowadays it have been repaired
+        //     if(valueRockerKey.reversalFlag)
+        //     {
+        //         valueRockerKey.phaseOffset = 0b0111;
+        //         valueRockerKey.frequency = 0;
+        //         valueRockerKey.reversalFlag = false;
+        //     }
+        // }
     }
     
     //first order filter

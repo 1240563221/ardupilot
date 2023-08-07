@@ -58,8 +58,8 @@
 #define MAX_FREQUENCY_FORWARD                           1.3f
 #define MAX_FREQUENCY_BACKWARD                          0.8f
 
-#define FREQUENCY_FIRST_ORDER_FILTER_GAIN               0.07f
-#define PHASE_OFFSET_FIRST_ORDER_FILTER_GAIN            0.02f
+#define FREQUENCY_FIRST_ORDER_FILTER_GAIN               0.1f
+#define PHASE_OFFSET_FIRST_ORDER_FILTER_GAIN            0.09f
 
 class KM_Solution
 {
