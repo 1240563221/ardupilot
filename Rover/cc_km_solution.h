@@ -11,19 +11,21 @@
     the Cube means use herelink v1.1 as the video transfer module because it has both radio and video transmission together.
     the Kakute means radio and video transmission are work independently.(like three angle video module and tx18s)
     */
-#define FLY_CONTROLLER_CHOOSE                          0       //0--herelink_v1.1   1--radio and video transmission independently
+#define FLY_CONTROLLER_CHOOSE                          0       //0--cubeorange_herelink_v1.1  1-kakuteH7mini+herelink_v1.1  2--kakuteH7mini + radio and video transmission independently
 
 #if  0 == FLY_CONTROLLER_CHOOSE
-#define BOTH_HERELINK_V11_MODULE_ENABLE                     //serial(1)
+#define CUBEORANGE_HERELINK_V11_MODULE_ENABLE                     //serial(1)
 #elif 1 == FLY_CONTROLLER_CHOOSE
-#define SEPERATE_ELSR_915M_ENAB                      //serial(3)
+#define KAKUTEH7MINI_HERELINK_V11_MODULE_ENABLE                   //serial(3)
+#elif 2 == FLY_CONTROLLER_CHOOSE
+#define KAKUTEH7MINI_SEPERATE_ELSR_915M_ENAB                      //serial(3)
 #endif
 
 
 /*
     the difference between two macro is radio's channel correspond to high level commands(like forward, backward, turn, etc)
     */
-#if defined(BOTH_HERELINK_V11_MODULE_ENABLE)
+#if defined(CUBEORANGE_HERELINK_V11_MODULE_ENABLE)+defined(KAKUTEH7MINI_HERELINK_V11_MODULE_ENABLE)
     #define RC_CHANEL_ROCKER_LEFT_LONGITUDINAL      2
     #define RC_CHANEL_ROCKER_LEFT_LATERAL           3
     #define RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL     1
@@ -37,7 +39,7 @@
     #define AMPLITITUDE_THRESHOLD_1_4               1500
     #define AMPLITITUDE_THRESHOLD_2_4               1700
     #define AMPLITITUDE_THRESHOLD_3_4               1900
-#elif defined(SEPERATE_ELSR_915M_ENAB)
+#elif defined(KAKUTEH7MINI_SEPERATE_ELSR_915M_ENAB)
     #define RC_CHANEL_ROCKER_LEFT_LONGITUDINAL      2
     #define RC_CHANEL_ROCKER_LEFT_LATERAL           3
     #define RC_CHANEL_ROCKER_RIGHT_LONGITUDINAL     1

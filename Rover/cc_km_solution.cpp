@@ -5,7 +5,7 @@ const uint16_t ResetSLine = 0b1110111111111111;
 
 KM_Solution km_solution;
 
-#if defined(BOTH_HERELINK_V11_MODULE_ENABLE) + defined(SEPERATE_ELSR_915M_ENAB) != 1
+#if defined(CUBEORANGE_HERELINK_V11_MODULE_ENABLE) + defined(KAKUTEH7MINI_SEPERATE_ELSR_915M_ENAB) + defined(KAKUTEH7MINI_HERELINK_V11_MODULE_ENABLE)!= 1
     #error "you can't enable two macro at the same time !!!!!!!"
     #error "Please select one of two macro to enable !!!!!"
 #endif 
@@ -18,25 +18,17 @@ KM_Solution km_solution;
 void Rover::kmModelSolution(void)
 {
 
-#if defined(BOTH_HERELINK_V11_MODULE_ENABLE)
+#if defined(CUBEORANGE_HERELINK_V11_MODULE_ENABLE) + defined(KAKUTEH7MINI_HERELINK_V11_MODULE_ENABLE)
 
     km_solution.detectionKeyRocker();
     km_solution.runStep();
 
-#elif defined(SEPERATE_ELSR_915M_ENAB)
+    // hal.serial(3)->printf("origin phase:%d\n", km_solution.valueRockerKey.synPhase);
+
+#elif defined(KAKUTEH7MINI_SEPERATE_ELSR_915M_ENAB)
     // hal.serial(3)->printf("origin phase:%d\n", km_solution.valueRockerKey.synPhase);
     // hal.serial(3)->printf("synchronous phase:%d\n", km_solution.phase);
     // hal.serial(3)->printf("ch0_val:%d\n", hal.rcin->read(0));
-    // hal.serial(3)->printf("ch1_val:%d\n", hal.rcin->read(1));
-    // hal.serial(3)->printf("ch2_val:%d\n", hal.rcin->read(2));
-    // hal.serial(3)->printf("ch3_val:%d\n", hal.rcin->read(3));
-    // km_solution.detectionKeyRocker();
-    // hal.serial(3)->printf("key[A]:%d\n", km_solution.valueRockerKey.key[0]);
-    // hal.serial(3)->printf("ch4_val:%d\n", hal.rcin->read(4));
-    // hal.serial(3)->printf("ch5_val:%d\n", hal.rcin->read(5));
-    // hal.serial(3)->printf("ch6_val:%d\n", hal.rcin->read(6));
-    // hal.serial(3)->printf("ch7_val:%d\n", hal.rcin->read(7));
-    // hal.serial(3)->printf("ch8_val:%d\n", hal.rcin->read(8));
 
     km_solution.detectionKeyRocker();
     km_solution.runStep();
@@ -113,9 +105,9 @@ void KM_Solution::runStep(void)
         modbusFrame[4] = (byteModbus >> 8) & 0xFF;
         modbusFrame[5] = (byteModbus & 0xFF);
         generateCRC(modbusFrame);
-#if defined(BOTH_HERELINK_V11_MODULE_ENABLE)
+#if defined(CUBEORANGE_HERELINK_V11_MODULE_ENABLE) + defined(KAKUTEH7MINI_HERELINK_V11_MODULE_ENABLE)
         hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
-#elif defined(SEPERATE_ELSR_915M_ENAB)
+#elif defined(KAKUTEH7MINI_SEPERATE_ELSR_915M_ENAB)
         hal.serial(3)->write(modbusFrame, sizeof(modbusFrame));
 #endif
     }
@@ -129,9 +121,9 @@ void KM_Solution::runStep(void)
         modbusFrame[4] = (byteModbus >> 8) & 0xFF;
         modbusFrame[5] = (byteModbus & 0xFF);
         generateCRC(modbusFrame);
-#if defined(BOTH_HERELINK_V11_MODULE_ENABLE)
+#if defined(CUBEORANGE_HERELINK_V11_MODULE_ENABLE) + defined(KAKUTEH7MINI_HERELINK_V11_MODULE_ENABLE)
         hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
-#elif defined(SEPERATE_ELSR_915M_ENAB)
+#elif defined(KAKUTEH7MINI_SEPERATE_ELSR_915M_ENAB)
         hal.serial(3)->write(modbusFrame, sizeof(modbusFrame));
 #endif
     }
@@ -154,9 +146,9 @@ void KM_Solution::runStep(void)
             }
             else
             {
-#if defined(BOTH_HERELINK_V11_MODULE_ENABLE)
+#if defined(CUBEORANGE_HERELINK_V11_MODULE_ENABLE) + defined(KAKUTEH7MINI_HERELINK_V11_MODULE_ENABLE)
                 hal.serial(1)->write(modbusFrame, sizeof(modbusFrame));
-#elif defined(SEPERATE_ELSR_915M_ENAB)
+#elif defined(KAKUTEH7MINI_SEPERATE_ELSR_915M_ENAB)
                 hal.serial(3)->write(modbusFrame, sizeof(modbusFrame));
 #endif
                 if(sendFlag)
@@ -173,10 +165,10 @@ void KM_Solution::runStep(void)
     */
 void KM_Solution::detectionKeyRocker(void)
 {
-#if defined(BOTH_HERELINK_V11_MODULE_ENABLE)
+#if defined(CUBEORANGE_HERELINK_V11_MODULE_ENABLE) + defined(KAKUTEH7MINI_HERELINK_V11_MODULE_ENABLE)
     detectionKey(RC_CHANEL_KEY_B, valueRockerKey.key);
     detectionKey(RC_CHANEL_KEY_C, valueRockerKey.key);
-#elif defined(SEPERATE_ELSR_915M_ENAB)
+#elif defined(KAKUTEH7MINI_SEPERATE_ELSR_915M_ENAB)
     detectionKey(RC_CHANEL_KEY_B_C, valueRockerKey.key);
 #endif
     detectionRocker();
@@ -189,13 +181,13 @@ void KM_Solution::detectionKeyRocker(void)
     */
 void KM_Solution::detectionKey(uint8_t ch, uint8_t *buff)
 {
-#if defined(BOTH_HERELINK_V11_MODULE_ENABLE)
+#if defined(CUBEORANGE_HERELINK_V11_MODULE_ENABLE)+ defined(KAKUTEH7MINI_HERELINK_V11_MODULE_ENABLE)
     if(valueKey[ch-RC_CHANEL_KEY_A] != hal.rcin->read(ch))
     {
         buff[ch-RC_CHANEL_KEY_A] = 1;
     }
     valueKey[ch-RC_CHANEL_KEY_A] = hal.rcin->read(ch);
-#elif defined(SEPERATE_ELSR_915M_ENAB)
+#elif defined(KAKUTEH7MINI_SEPERATE_ELSR_915M_ENAB)
     static uint16_t tem_value = 0;
     static uint8_t  temCnt = 0;
 
@@ -226,7 +218,7 @@ void KM_Solution::detectionKey(uint8_t ch, uint8_t *buff)
     */
 void KM_Solution::detectionRocker(void)
 {
-#if defined(BOTH_HERELINK_V11_MODULE_ENABLE)
+#if defined(CUBEORANGE_HERELINK_V11_MODULE_ENABLE) + defined(KAKUTEH7MINI_HERELINK_V11_MODULE_ENABLE)
     //amplitude parameter
     uint16_t temAmplitude = hal.rcin->read(RC_CHANEL_ROCKER_LEFTUP);
     static uint8_t temAmVal = 0;
@@ -254,7 +246,7 @@ void KM_Solution::detectionRocker(void)
 
     valueRockerKey.amplitude = temAmVal;
 
-#elif defined(SEPERATE_ELSR_915M_ENAB)
+#elif defined(KAKUTEH7MINI_SEPERATE_ELSR_915M_ENAB)
     static uint8_t temAmVal = 0;
     uint16_t temAmplitude = hal.rcin->read(RC_CHANEL_ROCKER_AMPLITITUDE);
     if(temAmplitude <= AMPLITITUDE_THRESHOLD_0_4)
@@ -377,15 +369,6 @@ void KM_Solution::detectionRocker(void)
             }
         }
 
-        // if(valueRockerKey.frequency < 0.3)                      //ensure that robot doesn't move forward after releasing the backward joystick
-        // {                                                       //it's a bug  --- nowadays it have been repaired
-        //     if(valueRockerKey.reversalFlag)
-        //     {
-        //         valueRockerKey.phaseOffset = 0b0111;
-        //         valueRockerKey.frequency = 0;
-        //         valueRockerKey.reversalFlag = false;
-        //     }
-        // }
     }
     
     //first order filter

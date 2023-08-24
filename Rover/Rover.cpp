@@ -139,9 +139,9 @@ const AP_Scheduler::Task Rover::scheduler_tasks[] = {
 
     //my code
     // SCHED_TASK(my_serial1,    20,    200, 128),
-#if defined(BOTH_HERELINK_V11_MODULE_ENABLE)
+#if defined(CUBEORANGE_HERELINK_V11_MODULE_ENABLE)+ defined(KAKUTEH7MINI_HERELINK_V11_MODULE_ENABLE)
     SCHED_TASK(kmModelSolution,    20,    1000, 128),   //not correct,correspondent 25hz
-#elif defined(SEPERATE_ELSR_915M_ENAB)
+#elif defined(KAKUTEH7MINI_SEPERATE_ELSR_915M_ENAB)
     SCHED_TASK(kmModelSolution,    20,    1000, 128),   //not correct,correspondent 25hz
 #endif
 
